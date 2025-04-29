@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textos de Benidorm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            /* Bright background gradient */
+            background: linear-gradient(to bottom right, #ff7e5f, #feb47b, #ffc3a0); /* Example gradient: warm, bright colors */
+            color: #1a202c; /* Dark text for contrast */
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 1s ease; /* Smooth transition for background if it changes */
+        }
+         .lorente-title {
+            font-size: 1.5rem;
+            color: #8b5cf6; /* Purple/Violet color */
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 2px 2px #5b21b6; /* Darker purple shadow */
+        }
+        .quiz-container {
+            background-color: rgba(45, 55, 72, 0.9); /* Slightly lighter dark with some transparency */
+            border: 4px solid #4a5568;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+             color: #e2e8f0; /* Light text inside the container */
+        }
+        #question-area {
+            margin-bottom: 20px;
+            min-height: 80px; /* Ensure space */
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        #choices-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 2x2 grid or stack on small screens */
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .choice-button {
+            background-color: #48bb78; /* Green */
+            color: #1a202c; /* Dark text */
+            padding: 15px 10px; /* Adjust padding for smaller buttons */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem; /* Smaller font for choices */
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px #38a169; /* Darker green shadow */
+            text-align: center;
+            word-break: break-word; /* Break long words */
+        }
+        .choice-button:hover {
+            background-color: #38a169; /* Darker green on hover */
+        }
+        .choice-button:active {
+            background-color: #2f855a; /* Even darker on active */
+            transform: translateY(2px); /* Press effect */
+            box-shadow: 0 2px #276749;
+        }
+         .choice-button:disabled {
+            background-color: #a0aec0; /* Gray out when disabled */
+            box-shadow: 0 4px #718096;
+            cursor: not-allowed;
+        }
+
+        #feedback-area {
+            margin-top: 20px;
+            min-height: 30px; /* Ensure space */
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        #next-button, #play-again-button {
+             background-color: #63b3ed; /* Blue */
+            color: #1a202c; /* Dark text */
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px #4299e1; /* Darker blue shadow */
+            margin-top: 20px;
+            display: none; /* Hidden initially */
+        }
+         #next-button:hover, #play-again-button:hover {
+            background-color: #4299e1; /* Darker blue on hover */
+        }
+        #next-button:active, #play-again-button:active {
+            background-color: #3182ce; /* Even darker on active */
+            transform: translateY(2px); /* Press effect */
+            box-shadow: 0 2px #2b6cb0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 20px;
+            }
+             .lorente-title {
+                font-size: 1.2rem;
+            }
+            #question-area {
+                 font-size: 1rem;
+            }
+            .choice-button, #next-button, #play-again-button {
+                font-size: 0.8rem;
+                padding: 12px 10px;
+            }
+             #choices-area {
+                grid-template-columns: 1fr; /* Stack buttons on very small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="background-music" autoplay loop>
+        <source src="YOUR_MUSIC_FILE_URL_HERE.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="lorente-title">Un programa hecho por Lorente</div>
+
+    <div class="quiz-container">
+        <h1 class="text-2xl font-bold mb-6">Textos de Benidorm</h1>
+
+        <div id="quiz-area">
+            <div id="question-area">
+                Cargando pregunta...
+            </div>
+
+            <div id="choices-area">
+                </div>
+
+            <div id="feedback-area">
+                </div>
+
+            <button id="next-button">Siguiente Pregunta</button>
+             <button id="play-again-button">Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        // List of all possible names
+        const allNames = ['Puche', 'Luci', 'Antonio', 'Asun', 'Adri', 'Ana', 'Jose', 'Turca', 'Perpi', 'Raquel', 'Fini', 'Lorente'];
+
+        // Define ALL question templates with placeholders for names
+        const allQuestionTemplates = [
+            {
+                template: "¿Quién de los siguientes podría estar {action1} mientras {name2} y {name3} están {action2}?",
+                roles: [
+                    { placeholder: '{name1}', action: 'disfrutando de una cerveza en la piscina', isCorrect: true },
+                    { placeholder: '{name2}', action: 'buscando un sitio tranquilo', isCorrect: false },
+                    { placeholder: '{name3}', action: 'preguntando por la hora de la cena', isCorrect: false }
+                ],
+                questionAction: 'disfrutando de una cerveza en la piscina' // The action associated with the correct answer
+            },
+             {
+                template: "Si ves a {name1} y {name2} cerca de las luces de 'LOS ENFERMOS', ¿quién de ellos podría estar {action1}?",
+                roles: [
+                    { placeholder: '{name1}', action: 'preparándose para la fiesta', isCorrect: true },
+                    { placeholder: '{name2}', action: 'buscando un sitio para sentarse', isCorrect: false },
+                    { placeholder: '{name3}', action: 'pidiendo un taxi', isCorrect: false }, // Need at least 3 names for options
+                    { placeholder: '{name4}', action: 'contando chistes', isCorrect: false }
+                ],
+                 questionAction: 'preparándose para la fiesta'
+            },
+            {
+                template: "{name1} y {name2} están junto a la recepción. ¿Quién de los dos podría estar {action1} mientras la familia hace el check-in?",
+                roles: [
+                    { placeholder: '{name1}', action: 'comentando el bullicio y la gente que llega', isCorrect: true },
+                    { placeholder: '{name2}', action: 'hablando por teléfono', isCorrect: false },
+                    { placeholder: '{name3}', action: 'consultando un mapa', isCorrect: false },
+                     { placeholder: '{name4}', action: 'esperando a alguien', isCorrect: false }
+                ],
+                 questionAction: 'comentando el bullicio y la gente que llega'
+            },
+            {
+                template: "{name1} y {name2} están jugando con una pelota de playa cerca de {name3} y {name4}. ¿Quién de los cuatro podría ser {role}?",
+                roles: [
+                    { placeholder: '{name1}', action: 'uno de los que juega', isCorrect: true }, // Correct name will be one of the players
+                    { placeholder: '{name2}', action: 'uno de los que juega', isCorrect: false }, // Another player
+                    { placeholder: '{name3}', action: 'uno de los que observa', isCorrect: false }, // Observer
+                    { placeholder: '{name4}', action: 'uno de los que observa', isCorrect: false } // Observer
+                ],
+                 questionAction: 'uno de los que juega', // The role associated with the correct answer
+                 // Custom logic needed to pick 2 players and 2 observers, and make one player the correct answer
+                 generateQuestion: function(names) {
+                     // Shuffle names and pick 4
+                     const shuffledNames = shuffleArray([...names]);
+                     const selectedNames = shuffledNames.slice(0, 4);
+
+                     // Assign roles: first two are players, last two are observers
+                     const players = selectedNames.slice(0, 2);
+                     const observers = selectedNames.slice(2, 4);
+
+                     // Randomly pick one player as the correct answer
+                     const correctName = players[Math.floor(Math.random() * players.length)];
+
+                     // Construct the question text
+                     const questionText = `${players[0]} y ${players[1]} están jugando con una pelota de playa cerca de ${observers[0]} y ${observers[1]}. ¿Quién de los cuatro podría ser uno de los que juega?`;
+
+                     // Create the answer options (all 4 names) and find the index of the correct name
+                     const answers = shuffleArray([...selectedNames]);
+                     const correctAnswerIndex = answers.indexOf(correctName);
+
+                     return {
+                         question: questionText,
+                         answers: answers,
+                         correctAnswerIndex: correctAnswerIndex,
+                         correctName: correctName // Store the correct name for checking
+                     };
+                 }
+            },
+            {
+                template: "Entre {name1}, {name2}, {name3} y {name4}, ¿quién es más probable que esté pidiendo otra ronda de bebidas?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'pidiendo bebidas', isCorrect: true },
+                    { placeholder: '{name2}', action: 'bailando', isCorrect: false },
+                    { placeholder: '{name3}', action: 'descansando', isCorrect: false },
+                     { placeholder: '{name4}', action: 'haciendo fotos', isCorrect: false }
+                ],
+                 questionAction: 'pidiendo bebidas'
+            },
+             {
+                template: "{name1} parece un poco perdido buscando algo, mientras {name2}, {name3} y {name4} están en la pista de baile. ¿Quién es el que está buscando algo?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'buscando algo', isCorrect: true },
+                    { placeholder: '{name2}', action: 'bailando', isCorrect: false },
+                    { placeholder: '{name3}', action: 'bailando', isCorrect: false },
+                     { placeholder: '{name4}', action: 'bailando', isCorrect: false }
+                ],
+                 questionAction: 'buscando algo'
+            },
+            // --- Questions about Hotel Bed, Kisses, Hugs ---
+            {
+                 template: "¿Quién de los siguientes podría estar quejándose de que la cama del hotel es demasiado dura?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'quejándose de la cama', isCorrect: true },
+                    { placeholder: '{name2}', action: 'durmiendo plácidamente', isCorrect: false },
+                    { placeholder: '{name3}', action: 'saltando en la cama', isCorrect: false },
+                    { placeholder: '{name4}', action: 'ordenando la habitación', isCorrect: false }
+                ],
+                questionAction: 'quejándose de la cama'
+            },
+             {
+                 template: "Si ves a {name1} y {name2} dándose un abrazo efusivo, ¿quién de ellos podría estar diciendo '¡Cuánto tiempo sin verte!'?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'diciendo ¡Cuánto tiempo sin verte!', isCorrect: true },
+                    { placeholder: '{name2}', action: 'respondiendo al abrazo', isCorrect: false },
+                    { placeholder: '{name3}', action: 'pasando por allí', isCorrect: false },
+                    { placeholder: '{name4}', action: 'mirando el móvil', isCorrect: false }
+                ],
+                questionAction: 'diciendo ¡Cuánto tiempo sin verte!'
+            },
+             {
+                 template: "Entre {name1}, {name2}, {name3} y {name4}, ¿quién es más probable que esté lanzando besos al aire en la fiesta?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'lanzando besos al aire', isCorrect: true },
+                    { placeholder: '{name2}', action: 'sirviendo bebidas', isCorrect: false },
+                    { placeholder: '{name3}', action: 'ajustándose las gafas de sol', isCorrect: false },
+                    { placeholder: '{name4}', action: 'buscando su toalla', isCorrect: false }
+                ],
+                questionAction: 'lanzando besos al aire'
+            },
+             {
+                 template: "Después de un largo día, ¿quién de estos podría estar deseando un abrazo de oso en la cama del hotel?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'deseando un abrazo de oso', isCorrect: true },
+                    { placeholder: '{name2}', action: 'preparándose para salir de nuevo', isCorrect: false },
+                    { placeholder: '{name3}', action: 'viendo la televisión', isCorrect: false },
+                    { placeholder: '{name4}', action: 'haciendo ejercicio', isCorrect: false }
+                ],
+                questionAction: 'deseando un abrazo de oso'
+            },
+            // --- Questions about Party, Beers, Hotel, Romantic Night, Sport, Bike, Jacuzzi ---
+            {
+                template: "En la fiesta de la piscina, ¿quién de los siguientes podría estar intentando impresionar a alguien con sus pasos de baile?",
+                roles: [
+                    { placeholder: '{name1}', action: 'intentando impresionar con el baile', isCorrect: true },
+                    { placeholder: '{name2}', action: 'sentado en la barra', isCorrect: false },
+                    { placeholder: '{name3}', action: 'hablando por teléfono', isCorrect: false },
+                    { placeholder: '{name4}', action: 'leyendo un libro', isCorrect: false }
+                ],
+                questionAction: 'intentando impresionar con el baile'
+            },
+            {
+                template: "Si oyes un '¡Salud!' muy fuerte cerca de la barra, ¿quién de estos podría haber sido?",
+                roles: [
+                    { placeholder: '{name1}', action: 'brindando con una cerveza', isCorrect: true },
+                    { placeholder: '{name2}', action: 'pidiendo agua', isCorrect: false },
+                    { placeholder: '{name3}', action: 'preguntando por la hora', isCorrect: false },
+                    { placeholder: '{name4}', action: 'buscando un asiento', isCorrect: false }
+                ],
+                questionAction: 'brindando con una cerveza'
+            },
+             {
+                template: "En una noche romántica en el balcón del hotel, ¿quién de esta pareja podría estar mirando las estrellas?",
+                roles: [
+                    { placeholder: '{name1}', action: 'mirando las estrellas', isCorrect: true },
+                    { placeholder: '{name2}', action: 'preparando algo de picar', isCorrect: false },
+                    { placeholder: '{name3}', action: 'hablando por teléfono', isCorrect: false }
+                     // Need at least 3 names for options, assuming a couple + one other
+                ],
+                questionAction: 'mirando las estrellas'
+            },
+             {
+                template: "¿Quién de los siguientes podría estar levantándose temprano para hacer deporte en la playa?",
+                roles: [
+                    { placeholder: '{name1}', action: 'haciendo deporte en la playa', isCorrect: true },
+                    { placeholder: '{name2}', action: 'durmiendo hasta tarde', isCorrect: false },
+                    { placeholder: '{name3}', action: 'desayunando tranquilamente', isCorrect: false },
+                    { placeholder: '{name4}', action: 'preparándose para la fiesta de la noche', isCorrect: false }
+                ],
+                questionAction: 'haciendo deporte en la playa'
+            },
+            {
+                template: "Si ves a alguien alquilando una bici cerca del hotel, ¿quién de estos podría ser?",
+                roles: [
+                    { placeholder: '{name1}', action: 'alquilando una bici', isCorrect: true },
+                    { placeholder: '{name2}', action: 'tomando el sol', isCorrect: false },
+                    { placeholder: '{name3}', action: 'jugando a las cartas', isCorrect: false },
+                    { placeholder: '{name4}', action: 'en la piscina', isCorrect: false }
+                ],
+                questionAction: 'alquilando una bici'
+            },
+             {
+                template: "En el jacuzzi del spa del hotel, ¿quién de los siguientes podría estar relajándose al máximo?",
+                roles: [
+                    { placeholder: '{name1}', action: 'relajándose en el jacuzzi', isCorrect: true },
+                    { placeholder: '{name2}', action: 'nadando en la piscina grande', isCorrect: false },
+                    { placeholder: '{name3}', action: 'en el gimnasio', isCorrect: false },
+                    { placeholder: '{name4}', action: 'en la recepción', isCorrect: false }
+                ],
+                questionAction: 'relajándose en el jacuzzi'
+            },
+            // --- New Questions (incorporating Sexo, Borrachera, Depilacion, Somos los mejores) ---
+            {
+                template: "¿Quién podría estar contando anécdotas de la noche anterior con un poco de resaca?",
+                roles: [
+                    { placeholder: '{name1}', action: 'contando anécdotas con resaca', isCorrect: true },
+                    { placeholder: '{name2}', action: 'despierto y fresco', isCorrect: false },
+                    { placeholder: '{name3}', action: 'durmiendo la mona', isCorrect: false },
+                    { placeholder: '{name4}', action: 'haciendo yoga', isCorrect: false }
+                ],
+                questionAction: 'contando anécdotas con resaca'
+            },
+             {
+                template: "En medio de la fiesta, ¿quién podría estar gritando '¡Somos los mejores!' a todo pulmón?",
+                roles: [
+                    { placeholder: '{name1}', action: 'gritando ¡Somos los mejores!', isCorrect: true },
+                    { placeholder: '{name2}', action: 'bailando tranquilamente', isCorrect: false },
+                    { placeholder: '{name3}', action: 'pidiendo un taxi', isCorrect: false },
+                    { placeholder: '{name4}', action: 'buscando su móvil', isCorrect: false }
+                ],
+                questionAction: 'gritando ¡Somos los mejores!'
+            },
+             {
+                template: "¿Quién de los siguientes podría estar presumiendo de su depilación perfecta para ir a la piscina?",
+                roles: [
+                    { placeholder: '{name1}', action: 'presumiendo de depilación', isCorrect: true },
+                    { placeholder: '{name2}', action: 'con prisa por bañarse', isCorrect: false },
+                    { placeholder: '{name3}', action: 'buscando crema solar', isCorrect: false },
+                    { placeholder: '{name4}', action: 'leyendo una revista', isCorrect: false }
+                ],
+                questionAction: 'presumiendo de depilación'
+            },
+            {
+                 template: "Después de unas cuantas cervezas, ¿quién de estos podría estar intentando ligar sin mucho éxito?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'intentando ligar borracho', isCorrect: true },
+                    { placeholder: '{name2}', action: 'hablando seriamente', isCorrect: false },
+                    { placeholder: '{name3}', action: 'bailando solo', isCorrect: false },
+                    { placeholder: '{name4}', action: 'comiendo patatas fritas', isCorrect: false }
+                ],
+                questionAction: 'intentando ligar borracho'
+            },
+             {
+                 template: "¿Quién podría estar cotilleando sobre quién se fue con quién anoche?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'cotilleando sobre la noche anterior', isCorrect: true },
+                    { placeholder: '{name2}', action: 'durmiendo', isCorrect: false },
+                    { placeholder: '{name3}', action: 'desayunando en silencio', isCorrect: false },
+                    { placeholder: '{name4}', action: 'leyendo el periódico', isCorrect: false }
+                ],
+                questionAction: 'cotilleando sobre la noche anterior'
+            },
+             {
+                 template: "En el balcón de la habitación, ¿quién podría estar teniendo un momento 'romántico' después de la fiesta?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'teniendo un momento romántico', isCorrect: true },
+                    { placeholder: '{name2}', action: 'llamando a su madre', isCorrect: false },
+                    { placeholder: '{name3}', action: 'contando dinero', isCorrect: false },
+                    { placeholder: '{name4}', action: 'quejándose del ruido', isCorrect: false }
+                ],
+                questionAction: 'teniendo un momento romántico'
+            },
+             {
+                 template: "Si alguien se cae a la piscina completamente borracho, ¿quién de estos podría ser?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'cayéndose borracho a la piscina', isCorrect: true },
+                    { placeholder: '{name2}', action: 'salvando a alguien', isCorrect: false },
+                    { placeholder: '{name3}', action: 'grabándolo con el móvil', isCorrect: false },
+                    { placeholder: '{name4}', action: 'pidiendo una toalla', isCorrect: false }
+                ],
+                questionAction: 'cayéndose borracho a la piscina'
+            },
+             {
+                 template: "¿Quién podría estar buscando la farmacia más cercana por culpa de la fiesta de anoche?",
+                 roles: [
+                    { placeholder: '{name1}', action: 'buscando la farmacia por resaca', isCorrect: true },
+                    { placeholder: '{name2}', action: 'comprando helados', isCorrect: false },
+                    { placeholder: '{name3}', action: 'en la playa', isCorrect: false },
+                    { placeholder: '{name4}', action: 'en el gimnasio', isCorrect: false }
+                ],
+                questionAction: 'buscando la farmacia por resaca'
+            }
+
+            // Add more question templates here
+        ];
+
+        let shuffledQuestions = []; // This will hold the subset of questions for the current game
+        const questionsPerGame = 8; // Define how many questions per game
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answerSelected = false; // Flag to prevent multiple clicks
+        let currentCorrectAnswerName = ''; // Store the correct name for the current question
+
+        const questionArea = document.getElementById('question-area');
+        const choicesArea = document.getElementById('choices-area');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        // Get the play-again button by its new ID
+        const playAgainButton = document.getElementById('play-again-button');
+
+        // Fisher-Yates (Knuth) Shuffle Algorithm
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Function to generate a question instance from a template
+        function generateQuestion(template, namesPool) {
+            // Ensure we have enough unique names
+            const requiredNamesCount = Object.keys(template.roles).length;
+             // Filter out names that are not in the allNames list before checking count
+            const availableNames = namesPool.filter(name => allNames.includes(name));
+
+            if (availableNames.length < requiredNamesCount) {
+                 console.error("Not enough names in the pool for this template:", template);
+                 return null; // Or handle error appropriately
+            }
+
+            // Handle custom question generation if defined in the template
+            if (template.generateQuestion) {
+                return template.generateQuestion(namesPool);
+            }
+
+            // Randomly select unique names for the roles from available names
+            const shuffledNamesPool = shuffleArray([...availableNames]);
+            const selectedNames = shuffledNamesPool.slice(0, requiredNamesCount);
+
+            // Map placeholders to selected names
+            const nameMap = {};
+            template.roles.forEach((role, index) => {
+                nameMap[role.placeholder] = selectedNames[index];
+            });
+
+            // Construct the question text using the template and mapped names/actions
+            let questionText = template.template;
+            let answers = [];
+            let correctName = '';
+            let correctAnswerIndex = -1;
+
+            // Fill in names and actions in the question text and build answer options
+            template.roles.forEach(role => {
+                 const name = nameMap[role.placeholder];
+                 // Replace placeholder like {name1} with the actual name
+                 questionText = questionText.replace(role.placeholder, name);
+
+                 answers.push(name); // Add the name as a potential answer
+
+                 if (role.isCorrect) {
+                     correctName = name; // Identify the correct name
+                 }
+            });
+
+            // Replace the question action placeholder(s) in the template string
+             questionText = questionText.replace('{action1}', template.questionAction); // Assuming {action1} is the main action placeholder
+             // Also replace {action2} if it exists
+             if (template.template.includes('{action2}')) {
+                 // Find the role associated with the action2 placeholder - this assumes a specific structure like {name2} having action2
+                 // A more robust way might involve mapping actions directly in the template structure
+                  const action2Role = template.roles.find(role => role.placeholder === '{name2}'); // Assuming action2 is linked to name2
+                 if (action2Role) {
+                      questionText = questionText.replace('{action2}', action2Role.action);
+                 } else {
+                     // Fallback or error handling if action2 placeholder is in template but no corresponding role/action is found
+                     console.warn("Placeholder {action2} found in template but no corresponding role/action defined.");
+                 }
+             }
+
+
+            // Shuffle the answers and find the index of the correct name
+            answers = shuffleArray(answers);
+            correctAnswerIndex = answers.indexOf(correctName);
+
+            return {
+                question: questionText,
+                answers: answers,
+                correctAnswerIndex: correctAnswerIndex,
+                correctName: correctName // Store the correct name for checking
+            };
+        }
+
+
+        // Function to load and display the current question
+        function loadQuestion() {
+            answerSelected = false; // Reset flag
+            feedbackArea.textContent = ''; // Clear feedback
+            nextButton.style.display = 'none'; // Hide next button
+            playAgainButton.style.display = 'none'; // Ensure play again button is hidden during quiz
+
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                const currentTemplate = shuffledQuestions[currentQuestionIndex];
+                 // Pass the full list of names to generateQuestion
+                const currentQuestion = generateQuestion(currentTemplate, allNames);
+
+
+                if (!currentQuestion) {
+                    // Handle case where question generation failed (e.g., not enough names)
+                    questionArea.textContent = "Error al cargar la pregunta. No hay suficientes nombres disponibles para esta pregunta.";
+                    choicesArea.innerHTML = '';
+                    // Optionally show restart button or end game
+                    playAgainButton.style.display = 'block';
+                    return;
+                }
+
+                questionArea.textContent = currentQuestion.question;
+                choicesArea.innerHTML = ''; // Clear previous choices
+                currentCorrectAnswerName = currentQuestion.correctName; // Store correct name
+
+                currentQuestion.answers.forEach((answer, index) => {
+                    const button = document.createElement('button');
+                    button.classList.add('choice-button');
+                    button.textContent = answer;
+                    // Pass the answer text to the click handler
+                    button.addEventListener('click', () => handleAnswerClick(answer, button));
+                    choicesArea.appendChild(button);
+                });
+            } else {
+                // End of quiz
+                displayResult();
+            }
+        }
+
+        // Function to handle user clicking an answer
+        function handleAnswerClick(selectedAnswerText, clickedButton) {
+            if (answerSelected) return; // Prevent multiple clicks
+            answerSelected = true;
+
+            const buttons = choicesArea.querySelectorAll('.choice-button');
+
+            // Disable all buttons after selection
+            buttons.forEach(button => button.disabled = true);
+
+            if (selectedAnswerText === currentCorrectAnswerName) {
+                feedbackArea.textContent = "¡Correcto!";
+                feedbackArea.style.color = '#48bb78'; // Green color
+                clickedButton.style.backgroundColor = '#48bb78'; // Highlight correct answer button
+                clickedButton.style.boxShadow = '0 4px #38a169';
+                score++;
+            } else {
+                feedbackArea.textContent = "Incorrecto. La respuesta correcta era: " + currentCorrectAnswerName;
+                 feedbackArea.style.color = '#f56565'; // Red color
+                 clickedButton.style.backgroundColor = '#f56565'; // Highlight incorrect answer button
+                 clickedButton.style.boxShadow = '0 4px #c53030';
+
+                 // Find and highlight the correct answer button
+                 buttons.forEach(button => {
+                     if (button.textContent === currentCorrectAnswerName) {
+                         button.style.backgroundColor = '#63b3ed'; // Highlight correct in blue
+                         button.style.boxShadow = '0 4px #4299e1';
+                     }
+                 });
+            }
+
+            // Show the next button if there are more questions, otherwise show play again
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
+                 nextButton.style.display = 'block';
+            } else {
+                 // Wait a moment before showing the result and play again button
+                 setTimeout(displayResult, 1000); // 1 second delay
+            }
+        }
+
+        // Function to display the final result
+        function displayResult() {
+            questionArea.textContent = `¡Quiz Terminado! Tu puntuación es: ${score} de ${shuffledQuestions.length}. ¿Quieres jugar de nuevo?`;
+            choicesArea.innerHTML = ''; // Clear choices
+            feedbackArea.textContent = ''; // Clear feedback
+            nextButton.style.display = 'none'; // Hide next button
+            // Show the play again button
+            playAgainButton.style.display = 'block';
+        }
+
+        // Function to start or restart the quiz
+        function startQuiz() {
+             // Shuffle ALL templates and select a subset for this game
+             const tempShuffledTemplates = shuffleArray([...allQuestionTemplates]);
+             // Ensure we don't ask for more questions than available templates
+             const numQuestions = Math.min(questionsPerGame, allQuestionTemplates.length);
+             shuffledQuestions = tempShuffledTemplates.slice(0, numQuestions);
+
+
+             currentQuestionIndex = 0;
+             score = 0;
+             playAgainButton.style.display = 'none'; // Hide play again button at the start
+             loadQuestion(); // Load the first question
+        }
+
+
+        // Event listener for the next button
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        // Event listener for the play again button (formerly restartButton)
+        playAgainButton.addEventListener('click', () => {
+            startQuiz(); // Restart the quiz
+        });
+
+        // Start the quiz when the page loads
+        startQuiz();
+
+    </script>
+</body>
+</html>
